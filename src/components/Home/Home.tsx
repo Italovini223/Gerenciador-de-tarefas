@@ -11,6 +11,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import EditNoteIcon from '@mui/icons-material/EditNote';
+import { Api } from '../utils/api';
 
 interface Item {
     id: number;
@@ -93,7 +94,7 @@ const Home: React.FC = () => {
 
         const fetchUserData = async () => {
             try {
-                const response = await axios.get('http://206.189.179.210/user', { withCredentials: true });
+                const response = await Api.get('/user', { withCredentials: true });
                 setUser(response.data);
             } catch (error) {
                 console.error('Erro ao buscar dados do usuário:', error);
@@ -113,12 +114,12 @@ const Home: React.FC = () => {
             
                 // Buscar o board
                 console.log("Buscando dados do board com ID", selectedBoardId);
-                const boardResponse = await axios.get(`http://206.189.179.210/boards/${selectedBoardId}`);
+                const boardResponse = await Api.get(`/boards/${selectedBoardId}`);
                 setBoard(boardResponse.data);
             
                 // Buscar as colunas associadas ao board
                 const columnPromises = boardResponse.data.columnIds.map((columnId: string) =>
-                    axios.get(`http://206.189.179.210/columns/${columnId}`).catch((error) => {
+                    Api.get(`/columns/${columnId}`).catch((error) => {
                         console.error(`Erro ao buscar coluna com ID ${columnId}:`, error.response);
                         return null; // Retorne null ou algum valor padrão para lidar com falhas
                     })
@@ -137,7 +138,7 @@ const Home: React.FC = () => {
             
                 // Buscar todas as tarefas de cada coluna
                 const taskPromises = fetchedColumns.map((column: Column) =>
-                    axios.get('http://206.189.179.210/tasks', {
+                    Api.get('/tasks', {
                         params: { columnId: column._id },
                     })
                 );
@@ -187,7 +188,7 @@ const Home: React.FC = () => {
         if (!editedTask) return;
 
         try {
-            await axios.put(`http://206.189.179.210/tasks/${taskId}`, editedTask);
+            await Api.put(`/tasks/${taskId}`, editedTask);
             // Atualiza localmente a tarefa alterada
             setTasks((prevTasks) =>
                 prevTasks.map((task) =>
@@ -230,8 +231,8 @@ const Home: React.FC = () => {
             );
     
             // 3. Envia as requisições para o backend para excluir a tarefa e atualizar a coluna
-            const deleteTaskPromise = axios.delete(`http://206.189.179.210/tasks/${taskId}`);
-            const updateColumnPromise = axios.patch(`http://206.189.179.210/columns/${columnId}`, {
+            const deleteTaskPromise = Api.delete(`/tasks/${taskId}`);
+            const updateColumnPromise = Api.patch(`/columns/${columnId}`, {
                 removeTaskId: taskId,
             });
     
@@ -262,7 +263,7 @@ const Home: React.FC = () => {
     
         try {
             // Envia a requisição para criar a tarefa
-            const response = await axios.post("http://206.189.179.210/tasks", defaultTask, {
+            const response = await Api.post("/tasks", defaultTask, {
                 withCredentials: true, // Envia o cookie da sessão
             });
 
@@ -285,15 +286,15 @@ const Home: React.FC = () => {
 
         try {
             // Envia a requisição para deletar a coluna
-            const response = await axios.delete(`http://206.189.179.210/columns/${columnId}`, {
+            const response = await Api.delete(`/columns/${columnId}`, {
                 withCredentials: true, // Envia o cookie da sessão
             });
     
             // Remover a coluna do estado
             setColumns((prevColumns) => prevColumns.filter((column) => column._id !== columnId));
 
-            await axios.put(
-                `http://206.189.179.210/boards/${selectedBoardId}`,
+            await Api.put(
+                `/boards/${selectedBoardId}`,
                 { columnIdToRemove: columnId }, // Payload informando a coluna a ser removida
                 { withCredentials: true }
             );
@@ -314,7 +315,7 @@ const Home: React.FC = () => {
     
         try {
             // Envia a requisição para criar a coluna
-            const response = await axios.post("http://206.189.179.210/columns", defaultColumn, {
+            const response = await Api.post("/columns", defaultColumn, {
                 withCredentials: true, // Envia o cookie da sessão
             });
 
@@ -339,7 +340,7 @@ const Home: React.FC = () => {
         if (taskId) {
             try {
                 
-                const response = await axios.put(`http://206.189.179.210/tasks/${taskId}`, {
+                const response = await Api.put(`/tasks/${taskId}`, {
                     columnId: columnId
                 });
     
@@ -376,7 +377,7 @@ const Home: React.FC = () => {
     const handleUpdateColumn = async (columnId: string) => {
         try {
             console.log(`Atualizando coluna com ID: ${columnId} para o novo nome: ${editedColumnName}`);
-            const response = await axios.put(`http://206.189.179.210/columns/${columnId}`, {
+            const response = await Api.put(`/columns/${columnId}`, {
                 name: editedColumnName,
             });
     
